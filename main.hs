@@ -2,6 +2,8 @@
 module Main where
 import Data.Char
 import Data.Maybe
+import Data.List
+
 nameOfFile = "input.txt"
 
 inputFile :: String -> IO [String]
@@ -29,10 +31,12 @@ checkHigh high list = if
     | high == length list -> True
     | otherwise -> False
 
+
 checkWidth :: Int -> [[Int]] -> Bool
 checkWidth width list = if
     | all ((\w l -> w == length l) width) list -> True
     | otherwise -> False
+
 
 initMatrix :: [String] ->  Int ->  Int -> [[Int]] -> [[Int]]
 initMatrix (x:xs) x_s y_s list_out = if 
@@ -50,17 +54,62 @@ initMatrix (x:xs) x_s y_s list_out = if
           out = map tr x : list_out
 
 
+findFirst_ :: [Int] -> Int -> Maybe Int
+findFirst_ list index = if
+                    | list !! index == 1 -> Just index
+                    | otherwise -> if
+                                | index < (length list -1)  -> findFirst_ list $ index + 1
+                                | otherwise -> Nothing
+
+
+findFirst :: [Int] -> Maybe Int
+findFirst list = findFirst_ list 0
+
+
+minX :: [[Int]] -> Int
+minX matrix = minimum $ map fromJust $ filter isJust $ map findFirst matrix
+
+
+maxX :: [[Int]] -> Int
+maxX matrix = let matrixR = map reverse matrix
+                  len = (length . head) matrix -1
+              in  len -  minX  matrixR
+
+
+minY :: [[Int]] -> Int
+minY matrix = let matrixT = transpose matrix
+              in minX matrixT
+
+maxY :: [[Int]] -> Int
+maxY matrix = let matrixT = transpose matrix
+              in maxX matrixT
+ 
+
+matrixSum :: [[Int]] -> Int
+matrixSum matrix = sum $ map sum matrix
+
+
+mainCheck :: [[Int]] -> Int
+mainCheck matrix = case matrixSum matrix of 
+                    0 -> if null matrix  then -1 else 1 
+                    1 -> 0
+                    x -> if
+                        | (a > max_width) || (a > max_high) -> -1 
+                        | otherwise -> (a*a) - x
+
+                    where min_x = minX matrix
+                          min_y = minY matrix
+                          max_x = maxX matrix
+                          max_y = maxY matrix
+                          width = max_x - min_x
+                          high = max_y - min_y
+                          max_width = length $ head matrix
+                          max_high = length matrix
+                          a = maximum [width, high] + 1
 
 main :: IO()
 main = do 
     lst <- inputFile nameOfFile  
-    print $ initMatrix lst 0 0 [] 
-    print lst     
-     
-     
-    
-
-
-
-
+    let matrix = initMatrix lst 0 0 [] 
+    print $ mainCheck matrix
 
