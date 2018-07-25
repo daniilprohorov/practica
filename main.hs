@@ -38,11 +38,11 @@ checkWidth width list = if
     | otherwise -> False
 
 
-initMatrix :: [String] ->  Int ->  Int -> [[Int]] -> [[Int]]
-initMatrix (x:xs) x_s y_s list_out = if 
-    | any isDigit x && null list_out-> initMatrix xs width high  list_out
+initMatrix_ :: [String] ->  Int ->  Int -> [[Int]] -> [[Int]]
+initMatrix_ (x:xs) x_s y_s list_out = if 
+    | any isDigit x && null list_out-> initMatrix_ xs width high  list_out
     | otherwise -> if 
-        | not (null xs) -> initMatrix xs x_s y_s $ map tr x : list_out   
+        | not (null xs) -> initMatrix_ xs x_s y_s $ map tr x : list_out   
         | otherwise -> if 
             | checkHigh y_s out && checkWidth x_s out -> out
             | otherwise -> error "COLUMNS AND ROWS ERROR"
@@ -53,6 +53,7 @@ initMatrix (x:xs) x_s y_s list_out = if
           tr = translate . decode
           out = map tr x : list_out
 
+initMatrix list = initMatrix_ list 0 0 []
 
 findFirst_ :: [Int] -> Int -> Maybe Int
 findFirst_ list index = if
@@ -107,9 +108,9 @@ mainCheck matrix = case matrixSum matrix of
                           max_high = length matrix
                           a = maximum [width, high] + 1
 
+--input monad IO string => apply string in context to combine of mainCheck and
+--initMatrix ==> print information in context of IO string
 main :: IO()
-main = do 
-    lst <- inputFile nameOfFile  
-    let matrix = initMatrix lst 0 0 [] 
-    print $ mainCheck matrix
+main = (mainCheck . initMatrix <$> inputFile nameOfFile) >>= print
+
 
